@@ -1,72 +1,70 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useReducer } from "react";
 import "./Board.css";
 import calculateWinner from "../utils/calculateWinner";
 
+const initialSquares = Array(9).fill(null);
+
+const gameReducer = (state, { type, payload }) => {
+  const { squares, isXNext } = state;
+  switch (type) {
+    case "SELECT_SQUARE":
+      const winner = calculateWinner(squares);
+
+      if (winner || squares[payload.square]) {
+        return state;
+      }
+      const squaresCopy = [...squares];
+      squaresCopy[payload.square] = isXNext ? "X" : "O";
+      return { squares: squaresCopy, isXNext: !isXNext };
+    case "RESET_GAME":
+      return {
+        isXNext: true,
+        squares: initialSquares
+      };
+    default:
+      throw new Error(`Unhandled action type: ${type}`);
+  }
+};
+
 const Board = () => {
-  const initialSquares = Array(9).fill(null);
-  const [squares, setSquares] = useState(initialSquares);
-
-  const useToggle = (initialState = false) => {
-    const [state, setState] = useState(initialState);
-    const toggle = useCallback(() => setState(s => !s), []);
-    return [state, toggle];
-  };
-
-  const [isXNext, toggleIsXNext] = useToggle(true);
+  const [{ squares, isXNext }, dispatch] = useReducer(gameReducer, {
+    squares: initialSquares,
+    isXNext: true
+  });
 
   const winner = calculateWinner(squares);
 
   const selectSquare = square => {
-    if (winner || squares[square]) {
-      return;
-    }
-    setSquares(s => {
-      const squaresCopy = [...s];
-      squaresCopy[square] = isXNext ? "X" : "O";
-      return squaresCopy;
+    dispatch({
+      type: "SELECT_SQUARE",
+      payload: {
+        square
+      }
     });
-    toggleIsXNext();
   };
 
-  const resetGame = useCallback(() => {
-    setSquares(() => initialSquares);
-  }, [initialSquares]);
+  const resetGame = () => {
+    dispatch({
+      type: "RESET_GAME"
+    });
+  };
 
-  const renderTie = useCallback(
-    () => (
-      <span>
-        Tied
-        <button className="new-game" onClick={() => resetGame()}>
-          New Game
-        </button>
-      </span>
-    ),
-    [resetGame]
+  const renderTie = () => (
+    <span>
+      Tied
+      <button className="new-game" onClick={() => resetGame()}>
+        New Game
+      </button>
+    </span>
   );
 
-  const renderWinner = useCallback(
-    () => (
-      <span>
-        {`Winner ${winner}`}
-        <button className="new-game" onClick={() => resetGame()}>
-          New Game
-        </button>
-      </span>
-    ),
-    [resetGame, winner]
-  );
-
-  const getStatus = useCallback(
-    (winner, squares) => {
-      if (winner) {
-        return renderWinner();
-      } else if (squares.every(Boolean)) {
-        return renderTie();
-      } else {
-        return `Next player is ${isXNext ? "X" : "O"}`;
-      }
-    },
-    [isXNext, renderTie, renderWinner]
+  const renderWinner = () => (
+    <span>
+      {`Winner ${winner}`}
+      <button className="new-game" onClick={() => resetGame()}>
+        New Game
+      </button>
+    </span>
   );
 
   const renderSquare = index => (
@@ -75,11 +73,17 @@ const Board = () => {
     </button>
   );
 
-  const status = useMemo(() => getStatus(winner, squares), [
-    getStatus,
-    squares,
-    winner
-  ]);
+  const getStatus = (winner, squares) => {
+    if (winner) {
+      return renderWinner();
+    } else if (squares.every(Boolean)) {
+      return renderTie();
+    } else {
+      return `Next player is ${isXNext ? "X" : "O"}`;
+    }
+  };
+
+  const status = getStatus(winner, squares);
 
   return (
     <div className="Board">
