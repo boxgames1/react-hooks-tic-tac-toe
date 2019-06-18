@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import "./Board.css";
 import calculateWinner from "../utils/calculateWinner";
 
@@ -28,15 +28,46 @@ const Board = () => {
     toggleIsXNext();
   };
 
-  const getStatus = (winner, squares) => {
-    if (winner) {
-      return renderWinner();
-    } else if (squares.every(Boolean)) {
-      return renderTie();
-    } else {
-      return `Next player is ${isXNext ? "X" : "O"}`;
-    }
-  };
+  const resetGame = useCallback(() => {
+    setSquares(() => initialSquares);
+  }, [initialSquares]);
+
+  const renderTie = useCallback(
+    () => (
+      <span>
+        Tied
+        <button className="new-game" onClick={() => resetGame()}>
+          New Game
+        </button>
+      </span>
+    ),
+    [resetGame]
+  );
+
+  const renderWinner = useCallback(
+    () => (
+      <span>
+        {`Winner ${winner}`}
+        <button className="new-game" onClick={() => resetGame()}>
+          New Game
+        </button>
+      </span>
+    ),
+    [resetGame, winner]
+  );
+
+  const getStatus = useCallback(
+    (winner, squares) => {
+      if (winner) {
+        return renderWinner();
+      } else if (squares.every(Boolean)) {
+        return renderTie();
+      } else {
+        return `Next player is ${isXNext ? "X" : "O"}`;
+      }
+    },
+    [isXNext, renderTie, renderWinner]
+  );
 
   const renderSquare = index => (
     <button className="square" onClick={() => selectSquare(index)}>
@@ -44,31 +75,15 @@ const Board = () => {
     </button>
   );
 
-  const resetGame = () => {
-    setSquares(() => initialSquares);
-  };
-
-  const renderTie = () => (
-    <span>
-      Tied
-      <button className="new-game" onClick={() => resetGame()}>
-        New Game
-      </button>
-    </span>
-  );
-
-  const renderWinner = () => (
-    <span>
-      {`Winner ${winner}`}
-      <button className="new-game" onClick={() => resetGame()}>
-        New Game
-      </button>
-    </span>
-  );
+  const status = useMemo(() => getStatus(winner, squares), [
+    getStatus,
+    squares,
+    winner
+  ]);
 
   return (
     <div className="Board">
-      <div className="status">{getStatus(winner, squares)}</div>
+      <div className="status">{status}</div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
