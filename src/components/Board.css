@@ -1,0 +1,48 @@
+
+
+.App{
+    margin: 2rem;
+  }
+  
+  .status{
+    margin-bottom: 1rem
+  }
+  
+  .Board{
+    width: calc(68px * 3);
+  }
+  
+  .board-row{
+    width: 100%;
+    border: 1px solid #333;
+    height: 88px;
+    border-bottom:none;
+    display: flex;
+  }
+  
+  .board-row:last-child{
+    border-bottom: 1px solid #333;
+  }
+  .new-game{
+    margin-left: 10px;
+  }
+  .square{
+    border:none;
+    cursor:pointer;
+    border-right: 1px solid #333;
+    font-size: 50px;
+    padding: 14px;
+    background: #fff;
+    font-weight: bold;
+    width: 67px;
+    height: 87px;
+    outline: none;
+  }
+  
+  .square:focus, .square:hover{
+      background-color: #ddd;
+  }
+
+  .square:last-child{
+    border-right: none;
+  }
